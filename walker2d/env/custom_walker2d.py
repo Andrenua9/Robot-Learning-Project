@@ -206,8 +206,9 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
         )
 
         self.set_state(qpos, qvel)
-
-        if self.domain== 'source':  # Ensure the mass modification is retained after reset
+    
+        # Apply UDR if specified
+        if self.udr_range > 0.0:
             self.set_random_parameters()
 
         observation = self._get_obs()
@@ -231,7 +232,7 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
             high = masses[1:] * (1.0 + self.udr_range)
             sampled_masses = self.np_random.uniform(low=low, high=high)
         else:
-            sampled_masses = np.copy(masses)
+            sampled_masses = np.copy(masses[1:])  # Exclude the first mass (torso)
             m = masses[self.target_link]
             low=m*(1.0 - self.udr_range)
             high=m*(1.0 + self.udr_range)

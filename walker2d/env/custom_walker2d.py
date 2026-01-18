@@ -122,8 +122,8 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
 
         self.original_masses = np.copy(self.model.body_mass[1:])    # Default link masses
 
-        if domain == 'source':  # Source environment has an imprecise torso mass (1kg shift)
-            self.model.body_mass[1] -= 1.0
+        if domain == 'source':  # Source environment has a torso mass shift (-3kg)
+            self.model.body_mass[1] -= 3.0
 
     @property
     def healthy_reward(self):
@@ -207,8 +207,8 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
 
         self.set_state(qpos, qvel)
     
-        # Apply UDR if specified
-        if self.udr_range > 0.0:
+        # Apply UDR only for source domain
+        if self.udr_range > 0.0 and self.domain == 'source':
             self.set_random_parameters()
 
         observation = self._get_obs()

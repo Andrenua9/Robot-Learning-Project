@@ -80,6 +80,7 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         self._exclude_current_positions_from_observation = (
             exclude_current_positions_from_observation
         )
+        self.domain = domain
 
         if xml_file == "hopper.xml":
              xml_file = os.path.join(os.path.dirname(__file__), "assets/hopper.xml")
@@ -212,8 +213,8 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
 
         self.set_state(qpos, qvel)
 
-        # Domain randomization: sample new masses at each episode reset if udr_range > 0
-        if self._udr_range > 0.0:
+        # Domain randomization: sample new masses at each episode reset if udr_range > 0 and domain is source
+        if self._udr_range > 0.0 and self.domain == 'source':
             self.set_random_parameters()
 
         observation = self._get_obs()

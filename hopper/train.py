@@ -14,7 +14,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 import matplotlib.pyplot as plt
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 def train_model(env_name, args, log_dir=None, verbose=0):
@@ -38,6 +38,8 @@ def train_model(env_name, args, log_dir=None, verbose=0):
         print(f"Using UDR with range ±{args.udr_range*100}% for training.")
     else:
         vec_env = make_vec_env(env_name, n_envs=8, monitor_dir=log_dir, seed=args.seed)
+
+    vec_env = VecNormalize(vec_env, norm_obs=True, norm_reward=True, clip_obs=10.)
     
     model = PPO(
         'MlpPolicy',
@@ -46,10 +48,15 @@ def train_model(env_name, args, log_dir=None, verbose=0):
         seed=args.seed
     )
     model.learn(total_timesteps=args.timesteps)
+    os.makedirs("stats", exist_ok=True)
+    stats_path = f"./stats/vec_normalize_hopper_{args.env}.pkl"
+    if args.udr_range > 0.0:
+        stats_path = f"./stats/vec_normalize_hopper_{args.env}_udr_{int(args.udr_range*100)}.pkl"
+    vec_env.save(stats_path)
     vec_env.close()
     return model
 
-def evaluate_model(model, env_name, n_episodes=50, render_mode=None):
+def evaluate_model(model, env_name, args, n_episodes=50, render_mode=None):
     """
     Evaluate a model trained on the specified environment
     
@@ -59,8 +66,14 @@ def evaluate_model(model, env_name, n_episodes=50, render_mode=None):
     :param render_mode: (str) Render mode ('human' or None)
     :return: (tuple) Mean reward and standard deviation
     """
-    env_test = gym.make(env_name, render_mode=render_mode)
-    env_test = Monitor(env_test)
+    env_test = DummyVecEnv([lambda: Monitor(gym.make(env_name, render_mode=render_mode))])
+    stats_path = f"./stats/vec_normalize_hopper_{args.env}.pkl"
+    if args.udr_range > 0.0:
+        stats_path = f"./stats/vec_normalize_hopper_{args.env}_udr_{int(args.udr_range*100)}.pkl"
+    env_test = VecNormalize.load(stats_path, env_test)
+    env_test.training = False
+    env_test.norm_reward = False
+    print(f'Masses for {env_name}: {env_test.env_method("get_parameters")[0]}')
     mean_reward, std_reward = evaluate_policy(model, env_test, n_eval_episodes=n_episodes, render=(render_mode is not None))
     env_test.close()
     return mean_reward, std_reward
@@ -112,19 +125,18 @@ def main(args):
             model_path += f"_udr_{int(args.udr_range*100)}"
         print(f"Evaluating model trained on {args.env} environment ({model_path})...")
         model = PPO.load(model_path)
-        
         render_mode = 'human' if args.render_test else None
 
         # Test on source env
         if args.env == 'source':
             print(f"\nTesting on source environment ({args.env}->source)...")
-            mean_reward, std_reward = evaluate_model(model, 'CustomHopper-source-v0', args.n_episodes, render_mode)
-            print(f"Source Env: Mean reward: {mean_reward} +/- {std_reward} - Num episodes: {args.n_episodes}")
+            mean_reward, std_reward = evaluate_model(model, 'CustomHopper-source-v0', args, args.n_episodes, render_mode)
+            print(f"Source Env: Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
         
         # Test on target env
         print(f"\nTesting on target environment ({args.env}->target)...")
-        mean_reward, std_reward = evaluate_model(model, 'CustomHopper-target-v0', args.n_episodes, render_mode)
-        print(f"Target Env: Mean reward: {mean_reward} +/- {std_reward} - Num episodes: {args.n_episodes}")
+        mean_reward, std_reward = evaluate_model(model, 'CustomHopper-target-v0', args, args.n_episodes, render_mode)
+        print(f"Target Env: Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
 
     else:
         # Training mode

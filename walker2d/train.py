@@ -9,7 +9,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 import matplotlib.pyplot as plt
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 def get_net_arch(size):
@@ -33,6 +33,7 @@ def train_model(env_name, args, log_dir=None, verbose=0):
     else:
         vec_env = make_vec_env(env_name, n_envs=8, monitor_dir=log_dir, seed=args.seed)
 
+    vec_env = VecNormalize(vec_env, norm_obs=True, norm_reward=True, clip_obs=10.)
     model=PPO(
         'MlpPolicy',
         vec_env,
@@ -48,12 +49,23 @@ def train_model(env_name, args, log_dir=None, verbose=0):
         seed=args.seed
         )
     model.learn(total_timesteps=args.timesteps)
+    os.makedirs("stats", exist_ok=True)
+    stats_path = f"./stats/vec_normalize_{args.env}_{args.net_arch}.pkl"
+    if args.udr_range > 0.0:
+        stats_path = f"./stats/vec_normalize_{args.env}_{args.net_arch}_udr_{int(args.udr_range*100)}.pkl"
+    vec_env.save(stats_path)
     vec_env.close()
     return model
 
-def evaluate_model(model, env_name, n_episodes=50, render_mode=None):
-    env_test = gym.make(env_name, render_mode=render_mode)
-    env_test = Monitor(env_test)
+def evaluate_model(model, env_name, args, n_episodes=50, render_mode=None):
+    env_test = DummyVecEnv([lambda: Monitor(gym.make(env_name, render_mode=render_mode))])
+    stats_path = f"./stats/vec_normalize_{args.env}_{args.net_arch}.pkl"
+    if args.udr_range > 0.0:
+        stats_path = f"./stats/vec_normalize_{args.env}_{args.net_arch}_udr_{int(args.udr_range*100)}.pkl"
+    env_test = VecNormalize.load(stats_path, env_test)
+    env_test.training = False
+    env_test.norm_reward = False
+    print(f'Masses for {env_name}: {env_test.env_method("get_parameters")[0]}')
     mean_reward, std_reward = evaluate_policy(model, env_test, n_eval_episodes=n_episodes, render=(render_mode is not None))
     env_test.close()
     return mean_reward, std_reward
@@ -106,11 +118,11 @@ def main(args):
 
         if args.env == 'source':
             print(f"\nTesting on source environment ({args.env}->source)...")
-            mean_reward, std_reward = evaluate_model(model, 'CustomWalker2d-source-v0', args.n_episodes, render_mode=render_mode)
+            mean_reward, std_reward = evaluate_model(model, 'CustomWalker2d-source-v0', args, args.n_episodes, render_mode=render_mode)
             print(f"Source Env: Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
         
         print(f"\nTesting on target environment ({args.env}->target)...")
-        mean_reward, std_reward = evaluate_model(model, 'CustomWalker2d-target-v0', args.n_episodes, render_mode=render_mode)
+        mean_reward, std_reward = evaluate_model(model, 'CustomWalker2d-target-v0', args, args.n_episodes, render_mode=render_mode)
         print(f"Target Env: Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
     else:
         log_dir = f"./logs/walker2d_{args.env}_{args.net_arch}"

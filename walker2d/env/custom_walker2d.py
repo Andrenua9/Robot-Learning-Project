@@ -41,6 +41,7 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
         domain: Optional[str] = None,
         target_link: Optional[int] = None,
         udr_range: float = 0.0,
+        symmetric: bool = False,
         **kwargs,
     ):
         utils.EzPickle.__init__(
@@ -59,6 +60,7 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
             domain,
             target_link,
             udr_range,
+            symmetric,
             **kwargs,
         )
 
@@ -80,6 +82,7 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
         self.domain = domain
         self.udr_range = udr_range
         self.target_link=target_link
+        self.symmetric = symmetric
 
         if xml_file == "walker2d.xml":
              xml_file = os.path.join(os.path.dirname(__file__), "assets/walker2d.xml")
@@ -122,8 +125,8 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
 
         self.original_masses = np.copy(self.model.body_mass[1:])    # Default link masses
 
-        if domain == 'source':  # Source environment has a torso mass shift (-3kg)
-            self.model.body_mass[1] -= 3.0
+        if domain == 'target':  # Target environment has a torso mass shift (+1.6kg)
+            self.model.body_mass[1] += 1.6
 
     @property
     def healthy_reward(self):
@@ -222,7 +225,10 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
     
     def set_random_parameters(self):
         """Set random masses """
-        self.set_parameters(self.sample_parameters())
+        if not self.symmetric:
+            self.set_parameters(self.sample_parameters())
+        else:
+            self.set_parameters(self.sample_symmetric_parameters())
     
     def sample_parameters(self):
         """Sample masses according to a domain randomization distribution """
@@ -239,6 +245,16 @@ class CustomWalker2d(MujocoEnv, utils.EzPickle):
             sampled_masses[self.target_link] = self.np_random.uniform(low=low, high=high)
         return sampled_masses
     
+    def sample_symmetric_parameters(self):
+        """Sample symmetric masses for left and right legs"""
+        '''Sample for one leg only, then copy to the other leg'''
+        masses = np.copy(self.original_masses)
+        low = masses[1:4] * (1.0 - self.udr_range)
+        high = masses[1:4] * (1.0 + self.udr_range)
+        sampled_leg = self.np_random.uniform(low=low, high=high) # 3 values
+        sampled_masses = np.concatenate([sampled_leg, sampled_leg])  # Copy for the other leg
+        return sampled_masses
+
     def get_parameters(self):
         """Get value of mass for each link"""
         masses = np.array( self.model.body_mass[1:] )

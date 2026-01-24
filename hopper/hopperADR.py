@@ -16,26 +16,26 @@ from stable_baselines3.common.callbacks import BaseCallback
 class HopperADR(gym.Wrapper):
     
     def __init__(self,env,range): 
-        super.__init__(env)
+        super().__init__(env)
 
         self.masses = self.unwrapped.get_parameters()
         self.range = range
 
 # start a new episode, initialization
     def reset(self, seed = None, options = None):
-        new_masses = np.array(self.masses).copy
-        for i in range (len(self.masses)):
-            if i != 0: #torso excluded
-                low = self.masses[i] * (1-self.range)
-                high = self.masses[i] * (1+self.range)
-                new_masses[i] = np.random.uniform(low,high)
+        new_masses = np.array(self.masses).copy()
+        low = new_masses[1:] * (1.0 - self.range)
+        high = new_masses[1:] * (1.0 + self.range)
+        new_masses = self.np_random.uniform(low=low, high=high)
+        print(f"Nuove masse: {new_masses}")
         self.unwrapped.set_parameters(new_masses)
         return self.env.reset(seed = seed, options = options)
     
 
 #we use callbacks to access internal state of the RL model during training
 class HopperADRCallback(BaseCallback):
-    def __init__(self, adr_wrapper, check_freq, up_thr, low_thr, step,):
+    def __init__(self, adr_wrapper, check_freq, up_thr, low_thr, step):
+        super().__init__()
         self.adr_wrapper = adr_wrapper
         self.check_freq = check_freq
         self.up_thr = up_thr
@@ -43,17 +43,31 @@ class HopperADRCallback(BaseCallback):
         self.step = step
 
     def _on_step(self) -> bool:
-        """
-        This method will be called by the model after each call to `env.step()`.
-        :return: If the callback returns False, training is aborted early.
-        """
 
+        if self.n_calls % self.check_freq == 0:
 
+            mean_reward, _ = evaluate_policy(
+                self.model,
+                self.adr_wrapper,
+                n_eval_episodes=5,
+                deterministic=True
+            )
+
+            print(f"[ADR] Performance: {mean_reward:.2f} | Range = {self.adr_wrapper.range:.3f}")
+
+            if mean_reward > self.up_thr:
+                self.adr_wrapper.range += self.step
+                print(f"[ADR] Range aumentato {self.adr_wrapper.range:.3f}")
+
+            elif mean_reward < self.low_thr:
+                self.adr_wrapper.range = max(0.0, self.adr_wrapper.range - self.step)
+                print(f"[ADR] Range diminuito {self.adr_wrapper.range:.3f}")
 
         return True
 
+    
+    
 
-        
 
 def train_agent(env, timesteps, adr_callback):
      model = PPO("MlpPolicy",env,learning_rate=0.0003, verbose = 0, gamma=0.99) #hyperameters
@@ -69,16 +83,16 @@ def test_agent(model, env):
     return mean_reward
 
 
-def main(args):
+def main():
     #parameters:
-    initial_udr_range=0.0,
+    initial_udr_range=0.0
     step_size = 0.05 #how much the range increases 
-    performance_lower_bound=150.0, #mean reward could be into this interval, if overcame or is near to upper bound we update the range
-    performance_upper_bound=350.0,
+    performance_lower_bound=150.0 #mean reward could be into this interval, if overcame or is near to upper bound we update the range
+    performance_upper_bound=350.0
     check_frequency = 30000 #defines how many timesteps should pass between performance evaluations
 
-    base_env = gym.make("Hopper Environment")
-    adr_env = HopperADR(base_env, initial_range=initial_udr_range)
+    base_env = gym.make("CustomHopper-source-v0")
+    adr_env = HopperADR(env=base_env, range=initial_udr_range)
 
 
     adr_callback = HopperADRCallback(adr_wrapper=adr_env, check_freq=check_frequency, up_thr=performance_upper_bound, low_thr=performance_lower_bound, step=step_size)
@@ -88,7 +102,7 @@ def main(args):
     print("Training starts...")
     model = train_agent(env=base_env, timesteps=1000000, adr_callback=adr_callback)
     model.save("Hopper ADR model")
-    
+
     test_agent(model, "CustomHopper-source-v0")
     test_agent(model, "CustomHopper-target-v0")
 

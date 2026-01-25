@@ -30,3 +30,15 @@
 | source -> source | source -> target |
 | --- | --- |
 | 2549.36 +/- 11.65 | 1870.94 +/- 293.47 |
+
+## Table for config C - with UDR 0.20
+| seed | source -> source | source -> target |
+| --- | --- | --- |
+| 42 | 2237.59 +/- 258.11 | 763.60 +/- 61.09 |
+| 10 | 2591.53 +/- 35.45 | 2407.76 +/- 248.34 |
+| 0 (random) | 2556.06 +/- 22.53 | 2603.25 +/- 30.69 |
+
+### Mean results across the 3 runs
+| source -> source | source -> target |
+| --- | --- |
+| 2461.73 +/- 105.36 | 1924.87 +/- 125.37 |

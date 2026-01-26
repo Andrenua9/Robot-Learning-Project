@@ -7,14 +7,13 @@ import argparse
 import gymnasium as gym
 import numpy as np
 import os
+
 from env.custom_hopper import *
 from stable_baselines3 import PPO
 from stable_baselines3.common.utils import set_random_seed
-from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
 import matplotlib.pyplot as plt
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.results_plotter import load_results, ts2xy
 
 def train_model(env_name, args, log_dir=None, verbose=0):
@@ -32,28 +31,31 @@ def train_model(env_name, args, log_dir=None, verbose=0):
     :return: (PPO) Trained model
     """
     # Create environment with optional UDR
+    env_kwargs = {}
     if args.udr_range > 0.0 and 'source' in env_name:
-        vec_env = make_vec_env(env_name, n_envs=8, monitor_dir=log_dir, 
-                               env_kwargs={"udr_range": args.udr_range}, seed=args.seed)
+        env_kwargs = {"udr_range": args.udr_range}
         print(f"Using UDR with range ±{args.udr_range*100}% for training.")
-    else:
-        vec_env = make_vec_env(env_name, n_envs=8, monitor_dir=log_dir, seed=args.seed)
+
+    env = gym.make(env_name, **env_kwargs)
+    env.reset(seed=args.seed)
+    env = Monitor(env, log_dir)
     
     model = PPO(
         'MlpPolicy',
-        vec_env,
-        n_steps=2048,
-        batch_size=64,
-        learning_rate=args.lr,
-        gamma=args.gamma,
-        n_epochs=10,
+        env,
+        n_steps=4096,
+        batch_size=32,
+        learning_rate=3e-4,
+        gamma=0.99,
+        n_epochs=5,
+        ent_coef=0,
         clip_range=0.2,
         verbose=verbose,
             ent_coef=0.0,
         seed=10
     )
     model.learn(total_timesteps=args.timesteps)
-    vec_env.close()
+    env.close()
     return model
 
 def evaluate_model(model, env_name, args, n_episodes=50, render_mode=None):
@@ -66,8 +68,9 @@ def evaluate_model(model, env_name, args, n_episodes=50, render_mode=None):
     :param render_mode: (str) Render mode ('human' or None)
     :return: (tuple) Mean reward and standard deviation
     """
-    env_test = DummyVecEnv([lambda: Monitor(gym.make(env_name, render_mode=render_mode))])
-    print(f'Masses for {env_name}: {env_test.env_method("get_parameters")[0]}')
+    env_test = Monitor(gym.make(env_name, render_mode=render_mode))
+    env_test.reset(seed=args.seed)
+    print(f'Masses for {env_name}: {env_test.get_parameters()}')
     mean_reward, std_reward = evaluate_policy(model, env_test, n_eval_episodes=n_episodes, render=(render_mode is not None))
     env_test.close()
     return mean_reward, std_reward

@@ -10,6 +10,7 @@ from env.custom_hopper import *
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.monitor import Monitor
 import matplotlib.pyplot as plt
 
 #it was necessary to implment this wrapper class in order to interact with the environment (in particular we use it to update the masses)
@@ -27,7 +28,7 @@ class HopperADR(gym.Wrapper):
         self.evaluation_mode = False
 
 # start a new episode, initialization
-    def reset(self, seed=None, options=None):
+    def reset(self, seed=0, options=None):
         if not self.evaluation_mode:
             masses = self.np_random.uniform(self.low, self.high)
             print(f"Nuove masse: {masses}")
@@ -74,11 +75,13 @@ class HopperADRCallback(BaseCallback):
         if self.n_calls % self.check_freq != 0:
             return True
 
-        #self.nTimesteps += self.check_freq
 
         print("\n[ADR] Valutazione boundary")
-        #print(f"Timesteps: {nTimesteps}")
 
+        max_range = np.max(self.adr_wrapper.high / self.adr_wrapper.nominal_masses[1:] - 1.0) 
+
+        if max_range >= 0.95:
+            return True 
         
         for i in range(0,len(self.adr_wrapper.nominal_masses)-1):
            
@@ -115,24 +118,18 @@ class HopperADRCallback(BaseCallback):
 
         print(f"[ADR] Mean reward boundary = {mean_reward:.2f}")
 
-        
-        max_range = np.max(self.adr_wrapper.high / self.adr_wrapper.nominal_masses[1:] - 1.0) #
-        if max_range > 1.0:
-            print("[ADR] Range > 1 raggiunto. Training interrotto.")
-            return False
-
         return True
 
     
     
-def train_agent(env, timesteps, adr_callback):
-     model = PPO("MlpPolicy",env,learning_rate=0.0003, verbose = 0, gamma=0.99) #hyperameters
+def train_agent(env, timesteps, adr_callback, log_dir=None):
+     model = PPO("MlpPolicy",env,learning_rate=0.0003, verbose = 0, gamma=0.99, n_epochs=5, batch_size=32, n_steps=4096) #hyperameters
      model.learn(total_timesteps=timesteps, callback=adr_callback) #return a trained model
      return model
 
 def test_agent(model, env):
     new_env = gym.make(env)
-    print(f"--- Testing  ---")
+    print(f"--- Testing  --- on {env}")
     mean_reward, std_reward = evaluate_policy(model, new_env, n_eval_episodes=50, deterministic=True)
         
     print(f"Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")
@@ -141,6 +138,8 @@ def test_agent(model, env):
     
 
 def plot_adr(callback):
+    import os
+    os.makedirs("plots", exist_ok=True)
 
     plt.figure(figsize=(10, 5))
     plt.plot(callback.timesteps, callback.mean_rewards, label="Mean Reward")
@@ -153,6 +152,7 @@ def plot_adr(callback):
     plt.title("ADR – Mean Reward & Range Updates")
     plt.legend()
     plt.grid(True)
+    plt.savefig("plots/adr_plot_0.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -164,20 +164,28 @@ def main():
     performance_upper_bound=600.0
     check_frequency = 30000 #defines how many timesteps should pass between performance evaluations
 
-    base_env = gym.make("CustomHopper-source-v0")
-    adr_env = HopperADR(env=base_env, initial_udr_range=initial_udr_range)
 
+
+    base_env = gym.make("CustomHopper-source-v0")
+    log_dir = f"./logs/hopper_adr_0"
+    adr_env = HopperADR(env=base_env, initial_udr_range=initial_udr_range)
+    adr_env = Monitor(env=adr_env, log_dir="logs")
 
     adr_callback = HopperADRCallback(adr_wrapper=adr_env, check_freq=check_frequency, up_thr=performance_upper_bound, low_thr=performance_lower_bound, step=step_size)
 
     #Training and testing
 
     print("Training starts...")
-    model = train_agent(env=base_env, timesteps=100000, adr_callback=adr_callback)
-    model.save("Hopper ADR model")
+    model = train_agent(env=base_env, timesteps=1500000, adr_callback=adr_callback)
+    
+    import os
+    os.makedirs("models", exist_ok=True)
+    model.save("models/HopperADR_model_0")
 
     test_agent(model, "CustomHopper-source-v0")
     test_agent(model, "CustomHopper-target-v0")
+    
+    plot_adr(adr_callback)
 
 if __name__ == "__main__":
     main()

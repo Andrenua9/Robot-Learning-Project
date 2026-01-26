@@ -70,7 +70,7 @@ def evaluate_model(model, env_name, args, n_episodes=50, render_mode=None):
     """
     env_test = Monitor(gym.make(env_name, render_mode=render_mode))
     env_test.reset(seed=args.seed)
-    print(f'Masses for {env_name}: {env_test.get_parameters()}')
+    print(f'Masses for {env_name}: {env_test.unwrapped.get_parameters()}')
     mean_reward, std_reward = evaluate_policy(model, env_test, n_eval_episodes=n_episodes, render=(render_mode is not None))
     env_test.close()
     return mean_reward, std_reward

@@ -11,7 +11,19 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.utils import set_random_seed
 import matplotlib.pyplot as plt
+import random
+
+SEED = 42
+
+def apply_seeding(seed):
+    set_random_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+apply_seeding(SEED)
 
 #it was necessary to implment this wrapper class in order to interact with the environment (in particular we use it to update the masses)
 class HopperADR(gym.Wrapper):
@@ -28,7 +40,7 @@ class HopperADR(gym.Wrapper):
         self.evaluation_mode = False
 
 # start a new episode, initialization
-    def reset(self, seed=0, options=None):
+    def reset(self, seed=SEED, options=None):
         if not self.evaluation_mode:
             masses = self.np_random.uniform(self.low, self.high)
             print(f"Nuove masse: {masses}")
@@ -80,7 +92,10 @@ class HopperADRCallback(BaseCallback):
 
         max_range = np.max(self.adr_wrapper.high / self.adr_wrapper.nominal_masses[1:] - 1.0) 
 
-        if max_range >= 0.95:
+        if self.num_timesteps < 100000:
+            return True
+
+        if max_range >= 0.7:
             return True 
         
         for i in range(0,len(self.adr_wrapper.nominal_masses)-1):
@@ -123,7 +138,7 @@ class HopperADRCallback(BaseCallback):
     
     
 def train_agent(env, timesteps, adr_callback, log_dir=None):
-     model = PPO("MlpPolicy",env,learning_rate=0.0003, verbose = 0, gamma=0.99, n_epochs=5, batch_size=32, n_steps=4096) #hyperameters
+     model = PPO("MlpPolicy",env,learning_rate=0.0003, verbose = 0, gamma=0.99, n_epochs=5, batch_size=32, n_steps=4096, seed=SEED) #hyperameters
      model.learn(total_timesteps=timesteps, callback=adr_callback) #return a trained model
      return model
 
@@ -152,7 +167,7 @@ def plot_adr(callback):
     plt.title("ADR – Mean Reward & Range Updates")
     plt.legend()
     plt.grid(True)
-    plt.savefig("plots/adr_plot_0.png", dpi=300, bbox_inches='tight')
+    plt.savefig("plots/adr_plot_42.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -162,25 +177,27 @@ def main():
     step_size = 0.05 #how much the range increases 
     performance_lower_bound=100.0 #mean reward could be into this interval, if overcame or is near to upper bound we update the range
     performance_upper_bound=600.0
-    check_frequency = 30000 #defines how many timesteps should pass between performance evaluations
+    check_frequency = 12288 #defines how many timesteps should pass between performance evaluations
 
 
 
     base_env = gym.make("CustomHopper-source-v0")
-    log_dir = f"./logs/hopper_adr_0"
-    adr_env = HopperADR(env=base_env, initial_udr_range=initial_udr_range)
-    adr_env = Monitor(env=adr_env, log_dir="logs")
+    log_dir = f"./logs/hopper_adr_42"
+    
+    adr_env = Monitor(env=base_env, filename=log_dir)
+    adr_env = HopperADR(env=adr_env, initial_udr_range=initial_udr_range)
+    
 
     adr_callback = HopperADRCallback(adr_wrapper=adr_env, check_freq=check_frequency, up_thr=performance_upper_bound, low_thr=performance_lower_bound, step=step_size)
 
     #Training and testing
 
     print("Training starts...")
-    model = train_agent(env=base_env, timesteps=1500000, adr_callback=adr_callback)
+    model = train_agent(env=base_env, timesteps=1000000, adr_callback=adr_callback)
     
     import os
     os.makedirs("models", exist_ok=True)
-    model.save("models/HopperADR_model_0")
+    model.save("models/HopperADR_model_42")
 
     test_agent(model, "CustomHopper-source-v0")
     test_agent(model, "CustomHopper-target-v0")

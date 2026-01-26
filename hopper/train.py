@@ -42,14 +42,15 @@ def train_model(env_name, args, log_dir=None, verbose=0):
     model = PPO(
         'MlpPolicy',
         vec_env,
-        n_steps=512,
+        n_steps=2048,
         batch_size=64,
         learning_rate=args.lr,
         gamma=args.gamma,
-        n_epochs=5,
+        n_epochs=10,
         clip_range=0.2,
         verbose=verbose,
-        seed=args.seed
+            ent_coef=0.0,
+        seed=10
     )
     model.learn(total_timesteps=args.timesteps)
     vec_env.close()

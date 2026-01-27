@@ -3,15 +3,15 @@ import numpy as np
 
 def create_thesis_plot():
     # --- 1. I DATI (Inseriti manualmente dai risultati [results.md]) ---
-    labels = ['Baseline ', 'ADR', 'UDR range migliore']
+    labels = ['Baseline ', 'ADR', 'UDR']
     
     # Medie
-    source_means = [1714.30, 2517.61, 1676.20]   #inserire la media delle reward ottenute con i vari seed (0, 20 e 42)
-    target_means = [943.57, 2185.05, 967.86]
+    source_means = [1714.30, 1588.95, 1469.76]   #inserire la media delle reward ottenute con i vari seed (0, 20 e 42)
+    target_means = [943.57, 1471, 1292.21]
     
     # Deviazioni Standard (Error Bars)
-    source_std = [27.63, 65.26, 100.11]
-    target_std = [30.82, 254.02, 509.28]
+    source_std = [27.63, 4.19, 29.69 ]
+    target_std = [30.82, 46.72, 34.33]
 
     # --- 2. SETUP DEL GRAFICO ---
     x = np.arange(len(labels))  # Posizione delle etichette
@@ -31,7 +31,7 @@ def create_thesis_plot():
 
     # --- 3. FORMATTAZIONE ESTETICA ---
     ax.set_ylabel('Average Reward', fontsize=12, fontweight='bold')
-    ax.set_title('Robustness Comparison: Symmetric vs Asymmetric UDR', fontsize=14, fontweight='bold', pad=20)
+    ax.set_title('Robustness Comparison: Baseline vs ADR vs UDR ', fontsize=14, fontweight='bold', pad=20)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=11)
     ax.legend(fontsize=11)
@@ -61,10 +61,10 @@ def create_thesis_plot():
     plt.tight_layout()
     
     # Salva in PDF (Vettoriale, perfetto per LaTeX/Word) e PNG (per preview)
-    plt.savefig('udr_results_comparison.pdf', format='pdf', dpi=300)
-    plt.savefig('udr_results_comparison.png', format='png', dpi=300)
+    plt.savefig('adr_results_comparison.pdf', format='pdf', dpi=300)
+    plt.savefig('adr_results_comparison.png', format='png', dpi=300)
     
-    print("Grafici salvati come 'udr_results_comparison.pdf' e '.png'")
+    print("Grafici salvati come 'adr_results_comparison.pdf' e '.png'")
     plt.show()
 
 if __name__ == "__main__":

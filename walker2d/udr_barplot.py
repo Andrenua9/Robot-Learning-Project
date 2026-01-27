@@ -3,15 +3,15 @@ import numpy as np
 
 def create_thesis_plot():
     # --- 1. I DATI (Inseriti manualmente dai risultati [results.md]) ---
-    labels = ['UDR Asym 0.30\n(Best)', 'UDR Sym 0.30', 'UDR Sym 0.50\n(Unstable)']
+    labels = ['Baseline', 'UDR Asym 0.30\n(Best)', 'UDR Sym 0.30', 'UDR Sym 0.50\n(Unstable)']
     
     # Medie
-    source_means = [2566.73, 2517.61, 1676.20]
-    target_means = [2241.73, 2185.05, 967.86]
+    source_means = [2752.53, 2566.73, 2517.61, 1676.20]
+    target_means = [1617.04, 2241.73, 2185.05, 967.86]
     
     # Deviazioni Standard (Error Bars)
-    source_std = [110.14, 65.26, 100.11]
-    target_std = [164.63, 254.02, 509.28]
+    source_std = [19.31, 110.14, 65.26, 100.11]
+    target_std = [405.24, 164.63, 254.02, 509.28]
 
     # --- 2. SETUP DEL GRAFICO ---
     x = np.arange(len(labels))  # Posizione delle etichette
@@ -61,10 +61,10 @@ def create_thesis_plot():
     plt.tight_layout()
     
     # Salva in PDF (Vettoriale, perfetto per LaTeX/Word) e PNG (per preview)
-    plt.savefig('udr_results_comparison.pdf', format='pdf', dpi=300)
-    plt.savefig('udr_results_comparison.png', format='png', dpi=300)
+    plt.savefig('baseline_udr_results_comparison.pdf', format='pdf', dpi=300)
+    plt.savefig('baseline_udr_results_comparison.png', format='png', dpi=300)
     
-    print("Grafici salvati come 'udr_results_comparison.pdf' e '.png'")
+    print("Grafici salvati come 'baseline_udr_results_comparison.pdf' e '.png'")
     plt.show()
 
 if __name__ == "__main__":

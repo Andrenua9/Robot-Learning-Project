@@ -81,13 +81,13 @@
 ### Table for udr30 network medium
 | seed | source -> source | source -> target |
 | --- | --- | --- |
-| 42 | 1028.93+/-9.96  | 710.44+/-163.02 |
+| 42 | 1221.31 +/- 422.33 | 1178.72 +/- 395.60 |
 | 10 | 1002.89+/-110.0 |  772.06+/-77.86 |
 | 0 (random) |  1021.10 +/- 245.62 | 795.04 +/- 255.68|
 ### Mean results across the 3 runs
 | source -> source | source -> target |
 | --- | --- |
-| 1017.64 +/- 121.86 | 759.18 +/- 242.62 |
+| 1048.43 +/- 259.32 | 915.27 +/- 243.04 |
 
 ### Table for udr30 network deep
 | seed | source -> source | source -> target |

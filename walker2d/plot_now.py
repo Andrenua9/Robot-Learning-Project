@@ -51,10 +51,10 @@ def main():
     #plot_results(log_folder, title="Learning Curve Smoothed", algo="walker2d_source_deep_udr30_seed42")
     # Dati Baseline (Sostituisci con i tuoi valori medi)
     archs = ['Small', 'Medium', 'Deep']
-    source_baseline = [2290.37, 1056.84, 1065.40] # Esempio: Performance ottime in training
-    target_baseline = [1585.79, 511.01, 626.23]    # Esempio: Crollo totale nel target
-    source_std = [15.88, 226.81, 156.90]         # Deviazioni standard per le barre di errore
-    target_std = [182.21, 99.35, 158.35]
+    source_baseline = [2604.08, 1017.64 , 811] # Esempio: Performance ottime in training
+    target_baseline = [2610.35, 759.18, 771.18]    # Esempio: Crollo totale nel target
+    source_std = [23.93, 121.86, 114.19]         # Deviazioni standard per le barre di errore
+    target_std = [183.83, 242.62, 158.97]
     x = np.arange(len(archs))
     width = 0.35
 
@@ -63,7 +63,7 @@ def main():
     rects2 = ax.bar(x + width/2, target_baseline, width, yerr=target_std, label='Target Env (Transfer)', color='#e15759', edgecolor='black')
 
     ax.set_ylabel('Average Reward', fontweight='bold')
-    ax.set_title('Reality Gap Analysis: UDR 0% Baseline', fontweight='bold', fontsize=14, pad=20)
+    ax.set_title('Reality Gap Analysis: UDR 30%', fontweight='bold', fontsize=14, pad=20)
     ax.set_xticks(x)
     ax.set_xticklabels(archs)
     ax.legend()
@@ -72,8 +72,9 @@ def main():
     autolabel(rects1,ax)
     autolabel(rects2,ax)
     plt.tight_layout()
+    plt.savefig(f"paper_figures/net_arch_udr30.pdf", format='pdf', dpi=300)
+
     plt.show()
-    plt.savefig(f"paper_figures/net_arch_ud0_baseline.pdf", format='pdf', dpi=300)
 
 
 if __name__ == "__main__":

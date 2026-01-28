@@ -15,7 +15,7 @@ from stable_baselines3.common.utils import set_random_seed
 import matplotlib.pyplot as plt
 import random
 
-SEED = 42
+SEED = 100
 
 def apply_seeding(seed):
     set_random_seed(seed)
@@ -167,7 +167,7 @@ def plot_adr(callback):
     plt.title("ADR – Mean Reward & Range Updates")
     plt.legend()
     plt.grid(True)
-    plt.savefig("plots/adr_plot_42.png", dpi=300, bbox_inches='tight')
+    plt.savefig("plots/adr_plot_100.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 
@@ -182,7 +182,7 @@ def main():
 
 
     base_env = gym.make("CustomHopper-source-v0")
-    log_dir = f"./logs/hopper_adr_42"
+    log_dir = f"./logs/hopper_adr_100"
     
     adr_env = Monitor(env=base_env, filename=log_dir)
     adr_env = HopperADR(env=adr_env, initial_udr_range=initial_udr_range)
@@ -197,7 +197,7 @@ def main():
     
     import os
     os.makedirs("models", exist_ok=True)
-    model.save("models/HopperADR_model_42")
+    model.save("models/HopperADR_model_100")
 
     test_agent(model, "CustomHopper-source-v0")
     test_agent(model, "CustomHopper-target-v0")

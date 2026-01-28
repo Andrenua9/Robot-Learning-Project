@@ -51,10 +51,10 @@ def main():
     #plot_results(log_folder, title="Learning Curve Smoothed", algo="walker2d_source_deep_udr30_seed42")
     # Dati Baseline (Sostituisci con i tuoi valori medi)
     archs = ['Small', 'Medium', 'Deep']
-    source_baseline = [2604.08, 1048.43 , 811] # Esempio: Performance ottime in training
-    target_baseline = [2610.35,  915.27 , 771.18]    # Esempio: Crollo totale nel target
-    source_std = [23.93, 259.32, 114.19]         # Deviazioni standard per le barre di errore
-    target_std = [183.83, 243.04, 158.97]
+    source_baseline = [2752.53 , 1056.84   , 1065.40] # Esempio: Performance ottime in training
+    target_baseline = [ 1617.04 ,  511.01 , 626.23]    # Esempio: Crollo totale nel target
+    source_std = [19.31 ,226.81, 156.90]         # Deviazioni standard per le barre di errore
+    target_std = [405.24,  99.35,158.35]
     x = np.arange(len(archs))
     width = 0.35
 
@@ -72,7 +72,7 @@ def main():
     autolabel(rects1,ax)
     autolabel(rects2,ax)
     plt.tight_layout()
-    plt.savefig(f"paper_figures/net_arch_udr30.pdf", format='pdf', dpi=300)
+    plt.savefig(f"paper_figures/net_arch_ud0_baseline.pdf", format='pdf', dpi=300)
 
     plt.show()
 

@@ -123,7 +123,7 @@
 | --- | --- |
 | 1056.84 +/- 226.81 | 511.01 +/- 99.35 |
 
-### Table for udr30 network deep
+### Table for baseline network deep
 | seed | source -> source | source -> target |
 | --- | --- | --- |
 | 42 | 1042.15+/- 151.25  |  612.48+/- 163.12  |

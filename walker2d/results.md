@@ -70,13 +70,13 @@
 ### Table for udr30 network small
 | seed | source -> source | source -> target |
 | --- | --- | --- |
-| 42 | 2587.12 +/- 22.80 |  2654.20+/-195.12 |
-| 10 |2615.45 +/- 26.84  | 2578.15+/- 164.55 |
-| 0 (random) | 2609.67 +/- 22.15 |  2598.70+/- 191.82 |
+| 42 | 2665.27 +/- 311.07 | 2568.22 +/- 348.99 |
+| 10 | 2420.95 +/- 9.48 | 1461.25 +/- 128.11 |
+| 0 (random) | 2613.97 +/- 9.88 | 2695.73 +/- 16.80 |
 ### Mean results across the 3 runs
 | source -> source | source -> target |
 | --- | --- |
-| 2604.08 +/- 23.93 | 2610.35 +/- 183.83 |
+| 2566.73 +/- 110.14 | 2241.73 +/- 164.63 |
 
 ### Table for udr30 network medium
 | seed | source -> source | source -> target |
@@ -102,15 +102,15 @@
 
 ### Baseline
 ### Table for baseline network small
-| seed | source -> source | source -> target |
-| --- | --- | --- |
-| 42 | 2265.40+/-14.12 |  1542.80+/-176.40 |
-| 10 |2265.40+/-17.55  |  1620.45+/-192.18 |
-| 0 (random) | 2265.40+/-15.97 |  1594.12+/-174.05 |
+| seed | source -> source | source -> target | target -> target |
+| --- | --- | --- | --- |
+| 42 | 2896.55 +/- 17.35 | 832.70 +/- 771.08 | 2845.33 +/- 14.56 |
+| 10 | 2693.26 +/- 13.13 | 1571.88 +/- 207.79 | 2720.77 +/- 7.74 |
+| 0 (random) | 2667.78 +/- 27.45 | 2446.55 +/- 236.85 | 2709.77 +/- 14.92 |
 ### Mean results across the 3 runs
-| source -> source | source -> target |
-| --- | --- |
-| 2290.37 +/- 15.88 | 1585.79 +/- 182.21 |
+| source -> source | source -> target | target -> target |
+| --- | --- | --- |
+| 2752.53 +/- 19.31 | 1617.04 +/- 405.24 | 2758.62 +/- 12.41 |
 
 ### Table for baseline network medium
 | seed | source -> source | source -> target |

@@ -2,7 +2,7 @@
 
 Official assignment at [Google Doc](https://docs.google.com/document/d/1XWE2NB-keFvF-EDT_5muoY8gdtZYwJIeo48IMsnr9l0/edit?usp=sharing).
 
-Project Overview
+# Project Overview
 
 This project investigates the effectiveness of Domain Randomization (DR) techniques in reducing the reality gap for robotic locomotion tasks in simulated environments.
 
@@ -16,25 +16,25 @@ In the ADR framework, the randomization range is dynamically adapted based on th
 
 The analysis is then extended to the more complex Walker2d environment, which introduces additional challenges due to its bipedal structure and higher degrees of freedom.
 
-🔬 Experimental Analysis
+# Experimental Analysis
 
 On Walker2d, we performed:
 
-Evaluation of different neural network architectures (Small [64,64], Medium, Deep)
+- Evaluation of different neural network architectures (Small [64,64], Medium, Deep)
 
-Robustness testing under systematic torso mass shifts
+- Robustness testing under systematic torso mass shifts
 
 Comparison between:
 
-Standard UDR
+- Standard UDR
 
-Symmetry-Constrained UDR
+- Symmetry-Constrained UDR
 
-Key Findings
+# Key Findings
 
-Domain Randomization significantly improves transfer robustness.
+- Domain Randomization significantly improves transfer robustness.
 
-Model capacity plays a critical role in generalization.
+- Model capacity plays a critical role in generalization.
 
 Surprisingly, the Small architecture ([64, 64]) outperformed larger networks, eliminating the performance drop in the target environment.
 
